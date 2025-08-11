@@ -22,26 +22,50 @@ const TicketModal: React.FC<TicketModalProps> = ({ isOpen, onClose, domain }) =>
 
     setIsSubmitting(true);
 
-    // Simulate ticket creation
-    setTimeout(() => {
-      const ticketId = `TK-${Date.now()}`;
+    try {
+      const ticketData = {
+        user_id: user.id,
+        domain: domain,
+        summary: summary,
+        priority: priority
+      };
+
+      const response = await fetch("http://localhost:8000/api/tickets", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(ticketData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Create ticket object for local state
       const ticket: Ticket = {
-        id: ticketId,
+        id: data.ticket_id,
         userId: user.id,
         domain,
         summary,
         priority,
         status: 'open',
         createdAt: new Date(),
-        slaTime: new Date(Date.now() + (priority === 'urgent' ? 2 : priority === 'high' ? 4 : 8) * 60 * 60 * 1000)
+        slaTime: new Date(data.sla_deadline)
       };
 
       addTicket(ticket);
-      setTicketCreated(ticketId);
+      setTicketCreated(data.ticket_id);
       setSummary('');
       setPriority('medium');
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+      alert('Failed to create ticket. Please try again.');
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   const getSLATime = (priority: string) => {
