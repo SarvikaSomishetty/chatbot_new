@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -11,6 +11,18 @@ services:
       POSTGRES_DB: tickets
     ports:
       - "5432:5432"
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpass
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
 
   redis:
     image: redis:7.2.5
@@ -57,3 +69,6 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+
+volumes:
+  mongodb_data:

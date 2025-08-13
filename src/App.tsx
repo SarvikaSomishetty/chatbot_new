@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AppProvider } from './contexts/AppContext';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import DomainSelection from './pages/DomainSelection';
 import Chat from './pages/Chat';
 
@@ -16,6 +17,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/select-domain" element={<DomainSelection />} />
               <Route path="/chat/:domain" element={<Chat />} />
               <Route path="*" element={<Navigate to="/" replace />} />
