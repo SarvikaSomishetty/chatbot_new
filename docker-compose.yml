@@ -1,4 +1,4 @@
-version: "3.8"
+
 
 services:
   postgres:
@@ -11,6 +11,9 @@ services:
       POSTGRES_DB: tickets
     ports:
       - "5432:5432"
+    volumes:
+      
+      - pgdata:/var/lib/postgresql/data
 
   mongodb:
     image: mongo:7.0
@@ -31,44 +34,6 @@ services:
     ports:
       - "6379:6379"
 
-  zookeeper:
-    image: bitnami/zookeeper:3.9.2
-    container_name: zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-
-  kafka:
-    image: bitnami/kafka:3.8.0
-    container_name: kafka
-    ports:
-      - "9092:9092"
-    environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-    depends_on:
-      - zookeeper
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-    ports:
-      - "9200:9200"
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.0
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-
 volumes:
+  pgdata:
   mongodb_data:
