@@ -7,6 +7,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import DomainSelection from './pages/DomainSelection';
 import Chat from './pages/Chat';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/select-domain" element={<DomainSelection />} />
               <Route path="/chat/:domain" element={<Chat />} />
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
