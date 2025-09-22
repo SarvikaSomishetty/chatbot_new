@@ -81,37 +81,37 @@ class TicketResponse(BaseModel):
 
 # Admin models
 class AdminLogin(BaseModel):
-	username: str
-	password: str
+    username: str
+    password: str
 
 class AdminResponse(BaseModel):
-	id: str
-	username: str
-	role: str
-	created_at: datetime
+    id: str
+    username: str
+    role: str
+    created_at: datetime
 
 class AdminToken(BaseModel):
-	access_token: str
-	token_type: str
-	admin: AdminResponse
+    access_token: str
+    token_type: str
+    admin: AdminResponse
 
 class TicketUpdate(BaseModel):
-	status: Optional[str] = None
-	priority: Optional[str] = None
-	notes: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    notes: Optional[str] = None
 
 class TicketDetails(BaseModel):
-	ticket_id: str
-	user_id: str
-	domain: str
-	subject: str
-	status: str
-	priority: str
-	sla_deadline: datetime
-	created_at: datetime
-	updated_at: datetime
-	user_name: Optional[str] = None
-	user_email: Optional[str] = None
+    ticket_id: str
+    user_id: str
+    domain: str
+    subject: str
+    status: str
+    priority: str
+    sla_deadline: datetime
+    created_at: datetime
+    updated_at: datetime
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
 
 # Helper functions
 def hash_password(password: str) -> str:
@@ -143,28 +143,28 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         id=user["_id"], email=user["email"], name=user["name"], created_at=user["created_at"]
     )
 
-# Startup: create tables and start SLA checker
 async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
-	try:
-		payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-		admin_id: str = payload.get("sub")
-		role: str = payload.get("role")
-		if admin_id is None or role != "admin":
-			raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-	except jwt.PyJWTError:
-		raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-	
-	admin = await mongo_db.admins.find_one({"_id": admin_id})
-	if admin is None:
-		raise HTTPException(status_code=401, detail="Admin not found")
-	
-	return AdminResponse(
-		id=admin["_id"],
-		username=admin["username"],
-		role=admin["role"],
-		created_at=admin["created_at"]
-	)
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        admin_id: str = payload.get("sub")
+        role: str = payload.get("role")
+        if admin_id is None or role != "admin":
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    
+    admin = await mongo_db.admins.find_one({"_id": admin_id})
+    if admin is None:
+        raise HTTPException(status_code=401, detail="Admin not found")
+    
+    return AdminResponse(
+        id=admin["_id"],
+        username=admin["username"],
+        role=admin["role"],
+        created_at=admin["created_at"]
+    )
 
+# Startup: create tables and start SLA checker
 @app.on_event("startup")
 async def startup_event():
     # PostgreSQL tables
@@ -192,38 +192,21 @@ async def startup_event():
             )
         """)
     await pool.close()
-	# Create PostgreSQL table if it doesn't exist
-	pool = await get_pg_pool()
-	async with pool.acquire() as conn:
-		await conn.execute("""
-			CREATE TABLE IF NOT EXISTS tickets (
-				ticket_id VARCHAR(36) PRIMARY KEY,
-				user_id VARCHAR(255) NOT NULL,
-				domain VARCHAR(100) NOT NULL,
-				subject TEXT NOT NULL,
-				status VARCHAR(50) DEFAULT 'Open',
-				priority VARCHAR(50) NOT NULL,
-				sla_deadline TIMESTAMP NOT NULL,
-				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-			)
-		""")
-	await pool.close()
-	
-	# Create default admin user if it doesn't exist
-	existing_admin = await mongo_db.admins.find_one({"username": "admin"})
-	if not existing_admin:
-		admin_id = str(uuid4())
-		hashed_password = hash_password("admin123")
-		admin_doc = {
-			"_id": admin_id,
-			"username": "admin",
-			"password": hashed_password,
-			"role": "admin",
-			"created_at": datetime.utcnow(),
-		}
-		await mongo_db.admins.insert_one(admin_doc)
-		print("Default admin created: username=admin, password=admin123")
+
+    # Create default admin user if it doesn't exist
+    existing_admin = await mongo_db.admins.find_one({"username": "admin"})
+    if not existing_admin:
+        admin_id = str(uuid4())
+        hashed_password = hash_password("admin123")
+        admin_doc = {
+            "_id": admin_id,
+            "username": "admin",
+            "password": hashed_password,
+            "role": "admin",
+            "created_at": datetime.utcnow(),
+        }
+        await mongo_db.admins.insert_one(admin_doc)
+        print("Default admin created: username=admin, password=admin123")
 
     # Start SLA background task
     await sla_checker.start_sla_checker(app, get_pg_pool, mongo_db)
@@ -232,8 +215,11 @@ async def startup_event():
 async def root():
     return {"message": "Chatbot Ticket API is running!"}
 
-# Auth routes
-@app.get("/api/admin/test")
+# -------------------- Include SLA routes --------------------
+app.include_router(get_sla_router(get_pg_pool, mongo_db))
+
+# -------------------- Auth, Ticket, Admin routes --------------------
+app.get("/api/admin/test")
 async def test_admin_connections():
 	try:
 		# Test PostgreSQL
@@ -656,6 +642,7 @@ async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_adm
 		
 	except Exception as e:
 		raise HTTPException(status_code=500, detail=f"Failed to retrieve stats: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
