@@ -8,7 +8,6 @@ import TicketModal from '../components/TicketModal';
 
 const Chat: React.FC = () => {
   const { domain } = useParams<{ domain: string }>();
-  const { selectedDomain } = useApp();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -19,6 +18,7 @@ const Chat: React.FC = () => {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionTicketId, setSessionTicketId] = useState<string | null>(null);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -48,17 +48,51 @@ const Chat: React.FC = () => {
     setMessage('');
     setIsTyping(true);
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      // Send question to AI chatbot
+      const response = await fetch('http://localhost:8000/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: 'user123', // You can get this from auth context
+          domain: domain || 'customer-support',
+          question: message,
+          conversation_id: sessionTicketId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+      
+      // Update conversation ID if we got a new one
+      if (data.conversation_id && !sessionTicketId) {
+        setSessionTicketId(data.conversation_id);
+      }
+
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: `I understand you're asking about "${message}". Let me help you with that. Based on our knowledge base, here's what I can suggest...`,
+        content: data.answer,
         sender: 'bot',
         timestamp: new Date()
       };
+      
       setMessages(prev => [...prev, botMessage]);
+      
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: 'I apologize, but I\'m having trouble connecting to the AI service. Please try again later.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   const handleFeedback = (messageId: string, helpful: boolean) => {
@@ -70,7 +104,7 @@ const Chat: React.FC = () => {
   };
 
   const formatDomainName = (domain: string) => {
-    return domain.split('-').map(word => 
+    return domain.split('-').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
@@ -78,7 +112,7 @@ const Chat: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Header showProfile />
-      
+
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
@@ -108,16 +142,15 @@ const Chat: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs lg:max-w-md ${
-                  msg.sender === 'user' 
-                    ? 'bg-blue-600 text-white' 
+                <div className={`max-w-xs lg:max-w-md ${msg.sender === 'user'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                } rounded-2xl px-4 py-3 shadow-sm`}>
+                  } rounded-2xl px-4 py-3 shadow-sm`}>
                   <p className="text-sm">{msg.content}</p>
                   <p className="text-xs mt-2 opacity-75">
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  
+
                   {msg.sender === 'bot' && (
                     <div className="flex items-center space-x-2 mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                       <span className="text-xs opacity-75">Was this helpful?</span>
@@ -138,7 +171,7 @@ const Chat: React.FC = () => {
                 </div>
               </div>
             ))}
-            
+
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700">

@@ -13,6 +13,28 @@ export interface ChatMessage {
   helpful?: boolean;
 }
 
+export interface ChatQuery {
+  user_id: string;
+  domain: string;
+  question: string;
+  conversation_id?: string;
+}
+
+export interface ChatResponse {
+  answer: string;
+  conversation_id: string;
+  domain: string;
+  timestamp: string;
+}
+
+export interface DomainInfo {
+  id: string;
+  name: string;
+  description: string;
+  color?: string;
+  icon?: string;
+}
+
 export interface Ticket {
   id: string;
   userId: string;
