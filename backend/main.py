@@ -1,3 +1,8 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv() 
+
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -10,6 +15,7 @@ import bcrypt
 import jwt
 from typing import Optional
 from contextlib import asynccontextmanager
+from notification_service import notification_service
 
 # Import SLA modules
 from sla import sla_checker
@@ -218,6 +224,11 @@ class TicketDetails(BaseModel):
     updated_at: datetime
     user_name: Optional[str] = None
     user_email: Optional[str] = None
+
+
+# New model for ticket resolution
+class TicketResolution(BaseModel):
+    resolution_notes: Optional[str] = None
 
 
 # Helper functions
@@ -715,6 +726,14 @@ async def update_ticket(
         update_fields.append(f"updated_at = CURRENT_TIMESTAMP")
         params.append(ticket_id)
 
+        # Get user_id before updating for potential email notification
+        user_id = None
+        if ticket_update.status and ticket_update.status.lower() == "resolved":
+            async with pool.acquire() as conn:
+                user_id_row = await conn.fetchrow("SELECT user_id FROM tickets WHERE ticket_id = $1", ticket_id)
+                if user_id_row:
+                    user_id = user_id_row['user_id']
+
         async with pool.acquire() as conn:
             await conn.execute(
                 f"""
@@ -758,12 +777,103 @@ async def update_ticket(
             except Exception as e:
                 print(f"Warning: failed to push admin note to Redis: {e}")
 
+        # Send resolution email if ticket resolved
+        if ticket_update.status and ticket_update.status.lower() == "resolved" and user_id:
+            # Get user details for notification
+            user = await mongo_db.users.find_one({"_id": user_id})
+            if user:
+                try:
+                    notification_sent = await notification_service.send_ticket_resolved_notification(
+                        user_email=user['email'],
+                        user_name=user['name'],
+                        ticket_id=ticket_id,
+                        resolution_notes=ticket_update.notes or ""
+                    )
+                    print(f"✅ Resolution notification sent: {notification_sent}")
+                except Exception as email_error:
+                    print(f"❌ Failed to send email notification: {email_error}")
+
         return {"message": "Ticket updated successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update ticket: {str(e)}")
+
+
+@app.put("/api/admin/tickets/{ticket_id}/resolve")
+async def admin_resolve_ticket(ticket_id: str, resolution: TicketResolution, current_admin: AdminResponse = Depends(get_current_admin)):
+    """Admin endpoint to resolve a ticket and send notification to user"""
+    try:
+        pool = await get_pg_pool()
+        
+        # First, get the ticket details
+        async with pool.acquire() as conn:
+            ticket_row = await conn.fetchrow("""
+                SELECT * FROM tickets WHERE ticket_id = $1
+            """, ticket_id)
+        
+        if not ticket_row:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+        
+        if ticket_row['status'] == 'Resolved':
+            raise HTTPException(status_code=400, detail="Ticket is already resolved")
+        
+        # Update ticket status to resolved
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                UPDATE tickets 
+                SET status = 'Resolved', updated_at = CURRENT_TIMESTAMP
+                WHERE ticket_id = $1
+            """, ticket_id)
+            
+            # Log the resolution event
+            await conn.execute("""
+                INSERT INTO sla_events (event_id, ticket_id, event, timestamp) 
+                VALUES ($1, $2, $3, NOW())
+            """, str(uuid4()), ticket_id, "Ticket Resolved by Admin")
+        
+        await pool.close()
+        
+        # Add resolution message to MongoDB
+        await mongo_db.ticket_messages.insert_one({
+            "ticket_id": ticket_id,
+            "message": f"[ADMIN] Ticket resolved by {current_admin.username}" + (f"\nResolution Notes: {resolution.resolution_notes}" if resolution.resolution_notes else ""),
+            "sender": "admin",
+            "created_at": datetime.utcnow(),
+            "metadata": {
+                "event_type": "admin_resolution",
+                "admin_id": current_admin.id,
+                "admin_username": current_admin.username,
+                "resolution_notes": resolution.resolution_notes
+            }
+        })
+        
+        # Get user details for notification
+        user = await mongo_db.users.find_one({"_id": ticket_row['user_id']})
+        notification_sent = False
+        
+        if user:
+            # Send resolution notification
+            notification_sent = await notification_service.send_ticket_resolved_notification(
+                user_email=user['email'],
+                user_name=user['name'],
+                ticket_id=ticket_id,
+                resolution_notes=resolution.resolution_notes or ""
+            )
+        
+        return {
+            "message": "Ticket resolved successfully",
+            "ticket_id": ticket_id,
+            "status": "Resolved",
+            "resolved_by": current_admin.username,
+            "notification_sent": notification_sent
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to resolve ticket: {str(e)}")
 
 
 @app.post("/api/chat/messages")

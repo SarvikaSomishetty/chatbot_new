@@ -187,14 +187,29 @@ class GeminiChatbot:
             return f"I apologize, but I'm experiencing technical difficulties. Please try again later. Error: {str(e)}"
     
     async def get_conversation_history(self, conversation_id: str) -> List[Dict]:
-        """Get conversation history from MongoDB"""
+        """Get conversation history from Redis first, then MongoDB as fallback"""
         try:
+            # Try Redis first for fast access
+            if self.redis_client:
+                cached_messages = await self.get_cached_messages(conversation_id)
+                if cached_messages:
+                    print(f"✅ Retrieved {len(cached_messages)} messages from Redis cache for conversation {conversation_id}")
+                    return cached_messages
+            
+            # Fallback to MongoDB
             conversation = await self.mongo_db.conversations.find_one({
                 "conversation_id": conversation_id
             })
-            return conversation.get("messages", []) if conversation else []
+            messages = conversation.get("messages", []) if conversation else []
+            
+            # Cache the messages in Redis for future fast access
+            if messages and self.redis_client:
+                await self.cache_recent_messages(conversation_id, messages[-10:])  # Cache last 10 messages
+                print(f"✅ Cached {len(messages[-10:])} recent messages from MongoDB to Redis for conversation {conversation_id}")
+            
+            return messages
         except Exception as e:
-            print(f"Error fetching conversation history: {e}")
+            print(f"❌ Error fetching conversation history: {e}")
             return []
     
     async def save_conversation(self, conversation_id: str, user_id: str, domain: str, messages: List[Dict]):
@@ -217,39 +232,46 @@ class GeminiChatbot:
             
             print(f"Saved conversation {conversation_id} to MongoDB - Domain: {domain}, Messages: {len(messages)}")
             
-            # Also cache recent messages in Redis for fast access (if Redis is available)
+            # Also cache all messages in Redis for fast access (if Redis is available)
             if self.redis_client:
-                await self.cache_recent_messages(conversation_id, messages[-10:])  # Last 10 messages
-                print(f"Cached recent messages for conversation {conversation_id} in Redis")
+                await self.cache_recent_messages(conversation_id, messages)  # All messages
+                print(f"✅ Cached all {len(messages)} messages for conversation {conversation_id} in Redis")
             
         except Exception as e:
             print(f"Error saving conversation: {e}")
     
     async def cache_recent_messages(self, conversation_id: str, messages: List[Dict]):
-        """Cache recent messages in Redis for fast access"""
+        """Cache recent messages in Redis for fast access using async redis_client"""
         if not self.redis_client:
             return
         try:
+            # Import the async Redis functions
+            from redis_client import push_message
+            
+            # Clear existing cache first
             redis_key = f"chat:{conversation_id}"
-            # Clear existing cache and add recent messages
             self.redis_client.delete(redis_key)
+            
+            # Add each message using the async push_message function
             for message in messages:
-                self.redis_client.rpush(redis_key, json.dumps(message))
+                await push_message(conversation_id, message)
+            
             # Set expiration to 24 hours
             self.redis_client.expire(redis_key, 86400)
+            print(f"✅ Cached {len(messages)} messages for conversation {conversation_id} in Redis")
         except Exception as e:
-            print(f"Error caching messages in Redis: {e}")
+            print(f"❌ Error caching messages in Redis: {e}")
     
     async def get_cached_messages(self, conversation_id: str) -> List[Dict]:
-        """Get cached messages from Redis"""
+        """Get cached messages from Redis using async redis_client"""
         if not self.redis_client:
             return []
         try:
-            redis_key = f"chat:{conversation_id}"
-            messages = self.redis_client.lrange(redis_key, 0, -1)
-            return [json.loads(msg) for msg in messages]
+            # Import the async Redis functions
+            from redis_client import get_messages
+            return await get_messages(conversation_id)
         except Exception as e:
-            print(f"Error getting cached messages: {e}")
+            print(f"❌ Error getting cached messages: {e}")
             return []
     
     async def process_query(self, query: ChatQuery) -> ChatResponse:
