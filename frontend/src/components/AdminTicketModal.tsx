@@ -208,7 +208,6 @@ const AdminTicketModal: React.FC<AdminTicketModalProps> = ({ isOpen, onClose, ti
                     onChange={(e) => setNewStatus(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   >
-                    <option value="Open">Open</option>
                     <option value="In-Progress">In Progress</option>
                     <option value="Resolved">Resolved</option>
                     <option value="Escalated">Escalated</option>

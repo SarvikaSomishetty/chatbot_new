@@ -17,56 +17,56 @@ const DomainSelection: React.FC = () => {
       id: 'customer-support',
       name: 'Customer Support',
       description: 'General inquiries, account issues, and product questions',
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-teal-500 to-blue-600',
       icon: 'Users'
     },
     {
       id: 'technical-support',
       name: 'Technical Support',
       description: 'Technical issues, bug reports, and troubleshooting',
-      color: 'from-green-500 to-green-600',
+      color: 'from-cyan-500 to-teal-600',
       icon: 'Wrench'
     },
     {
       id: 'finance',
       name: 'Finance',
       description: 'Billing, payments, refunds, and financial queries',
-      color: 'from-yellow-500 to-yellow-600',
+      color: 'from-emerald-500 to-teal-600',
       icon: 'DollarSign'
     },
     {
       id: 'travel',
       name: 'Travel',
       description: 'Bookings, cancellations, and travel arrangements',
-      color: 'from-purple-500 to-purple-600',
+      color: 'from-blue-500 to-indigo-600',
       icon: 'Plane'
     },
     {
       id: 'healthcare',
       name: 'Healthcare',
       description: 'Medical information and health guidance',
-      color: 'from-red-500 to-red-600',
+      color: 'from-teal-600 to-cyan-600',
       icon: 'Heart'
     },
     {
       id: 'education',
       name: 'Education',
       description: 'Learning support and educational guidance',
-      color: 'from-indigo-500 to-indigo-600',
+      color: 'from-indigo-500 to-blue-600',
       icon: 'GraduationCap'
     },
     {
       id: 'environment',
       name: 'Environment',
       description: 'Environmental conservation and sustainability',
-      color: 'from-emerald-500 to-emerald-600',
+      color: 'from-emerald-500 to-teal-600',
       icon: 'Leaf'
     },
     {
       id: 'technology',
       name: 'Technology',
       description: 'Software development and technical support',
-      color: 'from-gray-500 to-gray-600',
+      color: 'from-slate-500 to-teal-600',
       icon: 'Cpu'
     }
   ];
@@ -101,16 +101,16 @@ const DomainSelection: React.FC = () => {
 
   const getColorForDomain = (domainId: string): string => {
     const colorMap: Record<string, string> = {
-      'customer-support': 'from-blue-500 to-blue-600',
-      'technical-support': 'from-green-500 to-green-600',
-      'finance': 'from-yellow-500 to-yellow-600',
-      'travel': 'from-purple-500 to-purple-600',
-      'healthcare': 'from-red-500 to-red-600',
-      'education': 'from-indigo-500 to-indigo-600',
-      'environment': 'from-emerald-500 to-emerald-600',
-      'technology': 'from-gray-500 to-gray-600'
+      'customer-support': 'from-teal-500 to-blue-600',
+      'technical-support': 'from-cyan-500 to-teal-600',
+      'finance': 'from-emerald-500 to-teal-600',
+      'travel': 'from-blue-500 to-indigo-600',
+      'healthcare': 'from-teal-600 to-cyan-600',
+      'education': 'from-indigo-500 to-blue-600',
+      'environment': 'from-emerald-500 to-teal-600',
+      'technology': 'from-slate-500 to-teal-600'
     };
-    return colorMap[domainId] || 'from-blue-500 to-blue-600';
+    return colorMap[domainId] || 'from-teal-500 to-blue-600';
   };
 
   const getIconForDomain = (domainId: string): string => {
@@ -147,12 +147,15 @@ const DomainSelection: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-teal-900 dark:to-blue-900 transition-colors duration-200">
       <Header showProfile />
       
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-blue-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-teal-500/25">
+              <Users className="w-10 h-10 text-white" />
+            </div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Choose Your Support Category
             </h1>

@@ -1,10 +1,12 @@
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv() 
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from uuid import uuid4
@@ -41,7 +43,7 @@ async def lifespan(app: FastAPI):
                 user_id VARCHAR(255) NOT NULL,
                 domain VARCHAR(100) NOT NULL,
                 subject TEXT NOT NULL,
-                status VARCHAR(50) DEFAULT 'Open',
+                status VARCHAR(50) DEFAULT 'In-Progress',
                 priority VARCHAR(50) NOT NULL,
                 sla_deadline TIMESTAMP NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -115,11 +117,22 @@ app = FastAPI(title="Chatbot Ticket API", version="1.0.0", lifespan=lifespan)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve TTS audio files
+try:
+    # Get the tts_audio directory path (in backend/tts_audio/)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    tts_audio_dir = os.path.join(current_dir, "tts_audio")
+    os.makedirs(tts_audio_dir, exist_ok=True)
+    app.mount("/tts", StaticFiles(directory=tts_audio_dir), name="tts")
+except Exception as _e:
+    # Non-fatal: if mounting fails, backend continues to work without TTS static serving
+    pass
 
 # Security
 SECRET_KEY = "yF0QdmI6zNQHvoSwuaNYFd%VfQ7Yt@$o"
@@ -298,16 +311,31 @@ app.include_router(get_sla_router(get_pg_pool, mongo_db))
 
 # -------------------- Chatbot AI Routes --------------------
 @app.post("/ask", response_model=ChatResponse)
-async def ask_question(query: ChatQuery):
+async def ask_question(
+    query: ChatQuery,
+    current_user: UserResponse = Depends(get_current_user)
+):
     """Main chatbot endpoint - ask AI a question"""
     if not chatbot:
         raise HTTPException(status_code=500, detail="Chatbot not initialized")
     
     try:
+        # Override the user_id in the query with the authenticated user's ID
+        query.user_id = current_user.id
         response = await chatbot.process_query(query)
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
+@app.post("/chat")
+async def chat_endpoint(query: ChatQuery):
+    response = await chatbot.process_query(query)
+    return {
+        "answer": response.answer,
+        "conversation_id": response.conversation_id,
+        "domain": response.domain,
+        "timestamp": response.timestamp,
+        "tts_path": getattr(response, "tts_path", None)  # send audio path
+    }
 
 @app.get("/conversation/{conversation_id}")
 async def get_conversation(conversation_id: str):
@@ -333,6 +361,75 @@ async def list_conversations():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list conversations: {str(e)}")
 
+@app.get("/api/history")
+async def list_user_history(
+    domain: str,
+    limit: int = 50,
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """List user's conversation history for a specific domain"""
+    if not chatbot:
+        raise HTTPException(status_code=500, detail="Chatbot not initialized")
+    
+    try:
+        # Map domain ID to domain name (same mapping as in chatbot.py)
+        domain_mapping = {
+            'customer-support': 'Customer Support',
+            'technical-support': 'Technical Support', 
+            'finance': 'Finance',
+            'travel': 'Travel'
+        }
+        
+        domain_name = domain_mapping.get(domain, domain)
+        
+        # Get conversations from MongoDB, filtered by user_id AND domain
+        conversations = await mongo_db.conversations.find(
+            {"user_id": current_user.id, "domain": domain_name}
+        ).sort("updated_at", -1).limit(limit).to_list(length=None)
+
+        return [
+            {
+                "conversation_id": c.get("conversation_id"),
+                "domain": c.get("domain"),
+                "updated_at": c.get("updated_at"),
+                "message_count": len(c.get("messages", [])),
+                # Generate title from first user message
+                "title": next(
+                    (m.get("content", "")[:60] + "..." if len(m.get("content", "")) > 60 else m.get("content", "")
+                     for m in c.get("messages", []) if m.get("role") == "user"),
+                    "New Chat",
+                ),
+            }
+            for c in conversations
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get user history: {str(e)}")
+
+@app.get("/api/history/{conversation_id}")
+async def get_conversation_messages(
+    conversation_id: str,
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """Get messages for a specific conversation (user-scoped)"""
+    if not chatbot:
+        raise HTTPException(status_code=500, detail="Chatbot not initialized")
+    
+    try:
+        # Find conversation with user_id filter for security
+        conversation = await mongo_db.conversations.find_one(
+            {"conversation_id": conversation_id, "user_id": current_user.id},
+            {"_id": 0}  # omit Mongo _id
+        )
+        
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        return conversation.get("messages", [])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get conversation messages: {str(e)}")
+
 @app.get("/domains")
 async def get_supported_domains():
     """Get list of supported domains"""
@@ -348,6 +445,171 @@ async def get_supported_domains():
         ]
     }
 
+
+# -------------------- Dynamic FAQs --------------------
+@app.get("/api/faqs")
+async def get_dynamic_faqs(
+    domain: str,
+    limit: int = 5,
+    current_user: UserResponse = Depends(get_current_user),
+):
+    """Generate domain-specific FAQs for the authenticated user based on recent chat history.
+    Uses MongoDB conversations (fallback if Redis lacks aggregate view) and Gemini to summarize.
+    """
+    if not chatbot:
+        raise HTTPException(status_code=500, detail="Chatbot not initialized")
+
+    try:
+        # Map domain id to name (same mapping used by chatbot)
+        domain_mapping = {
+            'customer-support': 'Customer Support',
+            'technical-support': 'Technical Support',
+            'finance': 'Finance',
+            'travel': 'Travel'
+        }
+        domain_name = domain_mapping.get(domain, domain)
+
+        # Gather recent user questions across this user's conversations in this domain
+        recent_conversations = await mongo_db.conversations.find(
+            {"user_id": current_user.id, "domain": domain_name}
+        ).sort("updated_at", -1).limit(10).to_list(length=None)
+
+        user_questions = []
+        for conv in recent_conversations:
+            for msg in conv.get("messages", [])[-20:]:  # last 20 per conversation
+                if msg.get("role") == "user" and msg.get("content"):
+                    user_questions.append(msg["content"]) 
+
+        # Deduplicate while preserving order
+        seen = set()
+        deduped_questions = []
+        for q in reversed(user_questions):  # prefer newer at end -> reverse to keep latest first
+            key = q.strip().lower()
+            if key not in seen:
+                seen.add(key)
+                deduped_questions.append(q)
+        deduped_questions = list(reversed(deduped_questions))
+
+        # If not enough data, return most recent unique questions truncated
+        if not deduped_questions:
+            return {"faqs": []}
+
+        # Prepare the sample questions for the prompt
+        sample = "\n".join(f"- {q}" for q in deduped_questions[-50:])  # cap context size
+        
+        # Enhanced prompt with clear instructions
+        prompt = f"""You are an expert at identifying and formulating clear, concise frequently asked questions.
+        
+        **Task:** Analyze the following user questions from the {domain_name} domain and generate {limit} distinct, well-phrased FAQs.
+        
+        **Rules:**
+        - Each FAQ should be a complete, grammatically correct question
+        - Keep questions concise (max 15 words)
+        - Use proper capitalization and punctuation
+        - Focus on the most common and important topics
+        - Remove any personal or sensitive information
+        - Format each question on a new line starting with a dash (-)
+        
+        **Example Output Format:**
+        - How do I reset my password?
+        - What are your business hours?
+        - Where can I find my account number?
+        
+        **User Questions to Analyze:**
+        {sample}
+        
+        **Your {limit} FAQs (one per line, starting with - ):**"""
+
+        try:
+            print(f"Generating FAQs for {domain_name} domain with {len(deduped_questions)} sample questions")
+            
+            # Get FAQ suggestions from the LLM with timeout
+            try:
+                faqs_text = await asyncio.wait_for(
+                    chatbot.ask_llm(prompt, temperature=0.3), 
+                    timeout=15.0  # 15 second timeout
+                )
+                print("Received response from LLM")
+            except asyncio.TimeoutError:
+                print("LLM request timed out")
+                faqs_text = ""
+            except Exception as e:
+                print(f"Error getting response from LLM: {e}")
+                faqs_text = ""
+            
+            faqs = []
+            if faqs_text:
+                print(f"Raw LLM response: {faqs_text[:200]}...")  # Log first 200 chars
+                
+                # Parse the response into a clean list of FAQs
+                for line in faqs_text.splitlines():
+                    try:
+                        # Clean up the line and extract the question
+                        question = line.strip().lstrip("-•*1234567890. ").strip()
+                        # Ensure it's a valid question (more than 2 words, less than 15 words)
+                        if question and 2 < len(question.split()) < 15:
+                            # Basic validation - should end with a question mark
+                            if not question.endswith('?'):
+                                question = question.rstrip('.') + '?'
+                            faqs.append(question)
+                    except Exception as e:
+                        print(f"Error processing FAQ line '{line}': {e}")
+                        continue
+            
+            # Deduplicate while preserving order
+            seen = set()
+            dedup_final = []
+            for q in faqs:
+                try:
+                    # Normalize for deduplication (lowercase, no punctuation)
+                    norm_q = re.sub(r'[^\w\s]', '', q.lower())
+                    if norm_q and len(norm_q) > 10 and norm_q not in seen:  # Minimum length check
+                        seen.add(norm_q)
+                        dedup_final.append(q)
+                        if len(dedup_final) >= limit:
+                            break
+                except Exception as e:
+                    print(f"Error normalizing FAQ '{q}': {e}")
+                    continue
+                    
+        except Exception as e:
+            print(f"Error generating FAQs with LLM: {e}")
+            faqs_text = ""
+            dedup_final = []
+        
+        # Fallback to recent questions if LLM output is empty or insufficient
+        if not dedup_final and deduped_questions:
+            print(f"Using fallback questions for FAQs (have {len(deduped_questions)} recent questions)")
+            
+            # Clean up the fallback questions
+            dedup_final = []
+            for q in deduped_questions[-limit*2:]:  # Look at more questions to get enough good ones
+                try:
+                    if not q or not isinstance(q, str):
+                        continue
+                    q = q.strip()
+                    if not q:
+                        continue
+                    # Basic formatting
+                    q = q.capitalize().rstrip('.!?') + '?'
+                    # Simple deduplication check
+                    norm_q = re.sub(r'[^\w\s]', '', q.lower())
+                    if norm_q and len(norm_q) > 10 and norm_q not in seen:
+                        seen.add(norm_q)
+                        dedup_final.append(q)
+                        if len(dedup_final) >= limit:
+                            break
+                except Exception as e:
+                    print(f"Error processing fallback question '{q}': {e}")
+                    continue
+            
+            print(f"Generated {len(dedup_final)} fallback FAQs")
+
+        return {"faqs": dedup_final}
+    except Exception as e:
+        print(f"Error generating FAQs: {e}")
+        # graceful fallback
+        return {"faqs": []}
 
 # -------------------- Auth, Ticket, Admin routes --------------------
 @app.get("/api/admin/test")
@@ -463,7 +725,7 @@ async def create_ticket(ticket: TicketCreate):
             await conn.execute(
                 """
                 INSERT INTO tickets (ticket_id, user_id, domain, subject, status, priority, sla_deadline)
-                VALUES ($1, $2, $3, $4, 'Open', $5, $6)
+                VALUES ($1, $2, $3, $4, 'In-Progress', $5, $6)
             """,
                 ticket_id,
                 ticket.user_id,
@@ -1009,8 +1271,9 @@ async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_adm
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(app, host=host, port=port)
 
 
 

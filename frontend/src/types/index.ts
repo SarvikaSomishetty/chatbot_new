@@ -11,6 +11,7 @@ export interface ChatMessage {
   sender: 'user' | 'bot';
   timestamp: Date;
   helpful?: boolean;
+  ttsPath?: string;
 }
 
 export interface ChatQuery {
@@ -25,15 +26,9 @@ export interface ChatResponse {
   conversation_id: string;
   domain: string;
   timestamp: string;
+  tts_path?: string;
 }
 
-export interface DomainInfo {
-  id: string;
-  name: string;
-  description: string;
-  color?: string;
-  icon?: string;
-}
 
 export interface Ticket {
   id: string;
@@ -41,7 +36,7 @@ export interface Ticket {
   domain: string;
   summary: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'in-progress' | 'resolved' | 'escalated';
+  status: 'in-progress' | 'resolved' | 'escalated';
   createdAt: Date;
   slaTime?: Date;
 }

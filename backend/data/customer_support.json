@@ -1,0 +1,108 @@
+[
+  {
+    "question": "How can I reset my password?",
+    "answer": "Click on 'Forgot Password' on the login page, enter your email address, and follow the instructions sent to your email to reset your password."
+  },
+  {
+    "question": "What is your refund policy?",
+    "answer": "Refunds are processed within 5–7 business days after approval. You can request a refund within 30 days of purchase if you're not satisfied with the product or service."
+  },
+  {
+    "question": "How do I return an item?",
+    "answer": "To return an item, go to your account's order history, select the item you want to return, and click 'Return Item'. You'll receive a return shipping label via email within 24 hours."
+  },
+  {
+    "question": "What are your shipping options?",
+    "answer": "We offer standard shipping (5-7 business days), express shipping (2-3 business days), and overnight shipping. Shipping costs vary based on the option selected and package weight."
+  },
+  {
+    "question": "How can I track my order?",
+    "answer": "You'll receive a tracking number via email once your order ships. You can also track your order by logging into your account and visiting the 'My Orders' section."
+  },
+  {
+    "question": "How do I update my account information?",
+    "answer": "Log into your account, go to 'Account Settings', and click 'Edit Profile' to update your personal information, email, phone number, or shipping address."
+  },
+  {
+    "question": "What payment methods do you accept?",
+    "answer": "We accept credit cards (Visa, MasterCard, American Express), debit cards, PayPal, Apple Pay, Google Pay, and bank transfers for certain purchases."
+  },
+  {
+    "question": "How do I cancel my subscription?",
+    "answer": "Go to 'Account Settings' > 'Subscriptions', select the subscription you want to cancel, and click 'Cancel Subscription'. Your subscription will remain active until the end of the current billing period."
+  },
+  {
+    "question": "Where is my package?",
+    "answer": "Check your order tracking number in the email we sent, or log into your account and visit 'My Orders' to see the current shipping status and delivery estimate."
+  },
+  {
+    "question": "How do I contact customer support?",
+    "answer": "You can reach us via email at support@company.com, through the live chat on our website, or by calling our toll-free number 1-800-XXX-XXXX. Our support hours are Monday-Friday, 9 AM - 6 PM EST."
+  },
+  {
+    "question": "What is your return window?",
+    "answer": "You have 30 days from the date of delivery to return items for a full refund. Items must be in original condition with tags attached and original packaging when possible."
+  },
+  {
+    "question": "How do I change my shipping address?",
+    "answer": "You can update your shipping address in 'Account Settings' > 'Addresses'. For orders that have already shipped, you'll need to contact support to modify the delivery address."
+  },
+  {
+    "question": "Do you offer international shipping?",
+    "answer": "Yes, we ship to most countries worldwide. International shipping typically takes 10-21 business days and additional customs fees may apply depending on your location."
+  },
+  {
+    "question": "What if I received a damaged item?",
+    "answer": "If you received a damaged item, please contact us within 48 hours with photos of the damage. We'll arrange for a replacement or full refund, and we'll cover return shipping costs."
+  },
+  {
+    "question": "How do I apply a discount code?",
+    "answer": "Enter your discount code in the 'Promo Code' field at checkout and click 'Apply'. The discount will be automatically deducted from your order total before payment."
+  },
+  {
+    "question": "Can I modify my order after placing it?",
+    "answer": "Orders can be modified within 1 hour of placement if they haven't entered the fulfillment process. After that, contact customer support immediately to see if changes are still possible."
+  },
+  {
+    "question": "What is your warranty policy?",
+    "answer": "Most products come with a 1-year manufacturer warranty covering defects in materials and workmanship. Extended warranties are available for purchase at checkout for certain items."
+  },
+  {
+    "question": "How do I report a problem with my order?",
+    "answer": "Log into your account, go to 'My Orders', select the problematic order, and click 'Report Issue'. Alternatively, contact our support team directly with your order number."
+  },
+  {
+    "question": "Do you offer gift cards?",
+    "answer": "Yes, we offer digital and physical gift cards in various denominations. Gift cards can be purchased online and never expire. They can be used for any product on our website."
+  },
+  {
+    "question": "What is your privacy policy?",
+    "answer": "We take your privacy seriously. We only collect necessary information to process orders and improve our service. Your data is encrypted and never sold to third parties. View our full privacy policy on our website."
+  },
+  {
+    "question": "How do I create an account?",
+    "answer": "Click 'Sign Up' in the top right corner, enter your email address and create a password, verify your email through the confirmation link we send, and you're all set to start shopping."
+  },
+  {
+    "question": "What if I forgot my password?",
+    "answer": "Click 'Forgot Password' on the login page, enter your registered email address, and check your inbox for password reset instructions. The link expires in 24 hours."
+  },
+  {
+    "question": "Do you offer price matching?",
+    "answer": "Yes, we offer price matching for identical items found at lower prices on authorized retailer websites. Submit your price match request within 7 days of purchase with a valid link to the competitor's listing."
+  },
+  {
+    "question": "What are your store hours?",
+    "answer": "Our customer support team is available Monday through Friday, 9 AM to 6 PM EST, and Saturday from 10 AM to 4 PM EST. Our online store is open 24/7 for orders."
+  },
+  {
+    "question": "How do I unsubscribe from marketing emails?",
+    "answer": "Click the 'Unsubscribe' link at the bottom of any marketing email, or go to 'Account Settings' > 'Email Preferences' and uncheck the marketing communications box."
+  },
+  {
+    "question": "Can I exchange an item for a different size or color?",
+    "answer": "Yes, you can exchange items within 30 days of purchase. Start a return for the original item and place a new order for the desired size or color. We'll process the refund once we receive the returned item."
+  }
+]
+
+

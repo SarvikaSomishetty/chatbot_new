@@ -7,7 +7,7 @@ async def sla_background_task(get_pg_pool, mongo_db):
         try:
             pool = await get_pg_pool()
             async with pool.acquire() as conn:
-                rows = await conn.fetch("SELECT ticket_id, sla_deadline, status FROM tickets WHERE status='Open'")
+                rows = await conn.fetch("SELECT ticket_id, sla_deadline, status FROM tickets WHERE status='In-Progress'")
                 for row in rows:
                     if row['sla_deadline'] < datetime.utcnow():
                         await conn.execute(

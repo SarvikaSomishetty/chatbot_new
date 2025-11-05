@@ -1,0 +1,108 @@
+[
+  {
+    "question": "What is compound interest?",
+    "answer": "Compound interest is interest calculated on the initial principal plus accumulated interest from previous periods. It allows your money to grow exponentially over time, as you earn interest on both your original investment and the interest it generates."
+  },
+  {
+    "question": "How do I create a budget?",
+    "answer": "List all income sources, track all expenses for at least one month, categorize expenses (housing, food, transportation, etc.), compare income to expenses, set spending limits for each category, and use budgeting apps or spreadsheets to monitor progress."
+  },
+  {
+    "question": "What is a credit score and how is it calculated?",
+    "answer": "A credit score is a numerical representation of your creditworthiness, typically ranging from 300-850. It's calculated based on payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%)."
+  },
+  {
+    "question": "How do I improve my credit score?",
+    "answer": "Pay bills on time consistently, keep credit utilization below 30%, avoid closing old credit accounts, limit hard credit inquiries, maintain a mix of credit types, and regularly check your credit report for errors."
+  },
+  {
+    "question": "What is the difference between a savings account and a checking account?",
+    "answer": "Checking accounts are for daily transactions with easy access and often offer debit cards and checks, typically earning little to no interest. Savings accounts are for storing money long-term, usually offer higher interest rates, but may have withdrawal limitations."
+  },
+  {
+    "question": "How do I start investing?",
+    "answer": "Set clear investment goals, determine your risk tolerance, create an emergency fund first, start with low-cost index funds or ETFs, consider tax-advantaged accounts like 401(k) or IRA, diversify your portfolio, and consider consulting with a financial advisor."
+  },
+  {
+    "question": "What is a 401(k) plan?",
+    "answer": "A 401(k) is an employer-sponsored retirement savings plan that allows you to contribute pre-tax income. Contributions often reduce taxable income, many employers match contributions, and funds grow tax-deferred until withdrawal during retirement."
+  },
+  {
+    "question": "How much should I save for retirement?",
+    "answer": "A common guideline is to save 15-20% of your annual income. Aim to have 25-30 times your annual expenses saved by retirement age. Start early to benefit from compound interest - even small amounts saved consistently can grow significantly over time."
+  },
+  {
+    "question": "What is the difference between stocks and bonds?",
+    "answer": "Stocks represent ownership in a company and offer potential for higher returns but greater volatility. Bonds are loans to companies or governments that pay fixed interest, generally offering lower returns but more stability and predictable income."
+  },
+  {
+    "question": "How do I file my taxes?",
+    "answer": "Gather all necessary documents (W-2s, 1099s, receipts), choose filing method (online software, tax professional, or paper forms), determine your filing status, claim eligible deductions and credits, review your return carefully, and file by the April deadline."
+  },
+  {
+    "question": "What are tax deductions and credits?",
+    "answer": "Tax deductions reduce your taxable income (like mortgage interest, charitable contributions), while tax credits directly reduce your tax bill dollar-for-dollar (like child tax credit, education credits). Credits are generally more valuable than deductions of the same amount."
+  },
+  {
+    "question": "How do I manage debt?",
+    "answer": "List all debts with interest rates and minimum payments, prioritize high-interest debt first (debt avalanche method) or smallest debts first (debt snowball method), create a payment plan, consider debt consolidation, and avoid taking on new debt."
+  },
+  {
+    "question": "What is an emergency fund and how much should I save?",
+    "answer": "An emergency fund is money set aside to cover unexpected expenses. Aim to save 3-6 months of essential living expenses. Start with a goal of $1,000, then gradually build to cover housing, food, utilities, and other necessities for several months."
+  },
+  {
+    "question": "How do credit cards work?",
+    "answer": "Credit cards allow you to borrow money up to a credit limit. You can make purchases and either pay in full by the due date (avoiding interest) or make minimum payments (accruing interest). Responsible use builds credit; overspending leads to debt."
+  },
+  {
+    "question": "What is inflation and how does it affect my money?",
+    "answer": "Inflation is the rate at which prices for goods and services rise, reducing purchasing power over time. If inflation is 3% annually, $100 today will only buy $97 worth of goods next year. Investments should outpace inflation to preserve purchasing power."
+  },
+  {
+    "question": "How do I choose a bank?",
+    "answer": "Consider factors like fees (monthly maintenance, ATM, overdraft), interest rates on savings accounts, branch and ATM accessibility, online and mobile banking features, customer service quality, minimum balance requirements, and FDIC insurance coverage."
+  },
+  {
+    "question": "What is diversification in investing?",
+    "answer": "Diversification is spreading investments across different asset classes (stocks, bonds, real estate), sectors, geographic regions, and companies to reduce risk. The principle is that different investments perform differently, so losses in one area may be offset by gains in another."
+  },
+  {
+    "question": "How do I calculate my net worth?",
+    "answer": "List all assets (cash, investments, property, vehicles, valuables) and their current values. List all liabilities (mortgages, loans, credit card debt). Subtract total liabilities from total assets. The result is your net worth - recalculate periodically to track progress."
+  },
+  {
+    "question": "What is a mortgage and how does it work?",
+    "answer": "A mortgage is a loan used to purchase real estate. You make a down payment (typically 10-20%), borrow the remainder, and make monthly payments over 15-30 years. The property serves as collateral, and you build equity as you pay down the principal."
+  },
+  {
+    "question": "How do I save money on insurance?",
+    "answer": "Shop around and compare quotes annually, bundle policies (home and auto), increase deductibles if you can afford them, maintain good credit, ask about discounts (safe driver, good student, security systems), and review coverage to avoid over-insuring."
+  },
+  {
+    "question": "What is the difference between fixed and variable interest rates?",
+    "answer": "Fixed rates remain constant throughout the loan term, providing predictable payments. Variable rates can fluctuate based on market conditions, potentially starting lower but may increase over time. Fixed rates offer stability; variable rates offer potential savings if rates decrease."
+  },
+  {
+    "question": "How do I read my credit report?",
+    "answer": "Review personal information for accuracy, check account information (open and closed accounts, payment history), examine credit inquiries (hard inquiries affect score, soft do not), look for negative items (late payments, collections), and dispute any errors you find immediately."
+  },
+  {
+    "question": "What is dollar-cost averaging?",
+    "answer": "Dollar-cost averaging is an investment strategy where you invest a fixed amount regularly regardless of market conditions. This approach reduces the impact of volatility by buying more shares when prices are low and fewer when prices are high, averaging out costs over time."
+  },
+  {
+    "question": "How do I protect myself from financial fraud?",
+    "answer": "Monitor accounts regularly, use strong unique passwords, enable two-factor authentication, never share personal information via phone or email, shred financial documents, review credit reports annually, be cautious of phishing attempts, and use secure payment methods online."
+  },
+  {
+    "question": "What is a Roth IRA?",
+    "answer": "A Roth IRA is a retirement account where you contribute after-tax money. Contributions grow tax-free, and qualified withdrawals in retirement are tax-free. Unlike traditional IRAs, there's no required minimum distribution, and you can withdraw contributions (not earnings) penalty-free before retirement."
+  },
+  {
+    "question": "How do I negotiate a better salary?",
+    "answer": "Research market rates for your position, prepare a list of accomplishments and value you bring, practice your pitch, choose the right timing, be professional and respectful, consider total compensation (benefits, bonuses), and be prepared to negotiate non-salary benefits if needed."
+  }
+]
+
+

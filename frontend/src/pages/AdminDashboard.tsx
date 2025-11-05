@@ -83,7 +83,6 @@ const AdminDashboard: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'open': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
       case 'in-progress': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
       case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
       case 'escalated': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
@@ -237,12 +236,12 @@ const AdminDashboard: React.FC = () => {
 
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center">
-                    <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                      <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
+                      <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Open Tickets</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.status_breakdown?.Open || 0}</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In-Progress Tickets</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.status_breakdown?.['In-Progress'] || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -303,7 +302,6 @@ const AdminDashboard: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="all">All Status</option>
-                      <option value="open">Open</option>
                       <option value="in-progress">In Progress</option>
                       <option value="resolved">Resolved</option>
                       <option value="escalated">Escalated</option>
